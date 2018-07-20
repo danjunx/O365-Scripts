@@ -1,0 +1,12 @@
+<NewUser>
+    <Name>Bobby Tables</Name>
+    <StartDate>2018-03-19</StartDate>
+    <LineManager>John Smith</LineManager>
+    <Department>IT</Department>
+    <Site>New York</Site>
+    <JobTitle>Senior Table Dropper</JobTitle>
+    <OfficeEquipment>["Laptop computer"]</OfficeEquipment>
+    <SecurityEquivalent>Joe Bloggs</SecurityEquivalent>
+    <Notes>This user will be based at the New York office</Notes>
+    <SubmittedBy>Joe.King@domain.tld</SubmittedBy>
+</NewUser>
