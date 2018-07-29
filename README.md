@@ -2,7 +2,7 @@
 A collection of scripts related to AD/O365 automation tasks
 
 ### About this repo
-Inside this repo are a handful of scrpts that are used in a production environment to automate some repetitive tasks
+Inside this repo are a handful of scripts that are used in a production environment to automate some repetitive tasks
 
 ### How to use this repo
 Inside each folder you'll find the PowerShell script, a vbs file used to launch the script, a readme file with more info about the script, and an XML file that's used by the script (if applicable)

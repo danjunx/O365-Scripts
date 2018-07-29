@@ -27,9 +27,9 @@ $FormWhitelist = @("user.name@domain.tld","user1@domain.tld","user2@domain.tld")
 #							Office 365 email settings start here
 ###################################################################################################################################################################
 $username = "O365SVCAcct@domain.tld"
-$password = "password"
+$Password = cat "C:\Path\to\Keys\O365SVCAcct_domain.tld.key" | ConvertTo-SecureString
 $FormUsername = "O365FormsAcct@domain.tld"
-$FormPassword = "password"
+$FormPassword = cat "C:\Path\to\Keys\O365FormsAcct_domain.tld.key" | ConvertTo-SecureString
 
 $SmtpServer = "smtp.office365.com"
 $MailTo = @("helpdesk@domain.tld")
@@ -38,8 +38,8 @@ $MailPort = "587"
 $MailSubjectSubmitted = "AD Automation: New user form submitted"
 $MailSubjectCreated = "AD Automation: New user created"
 $MailSubjectFailed = "AD Automation: New user creation failed"
-$Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $($password | ConvertTo-SecureString -AsPlainText -Force)
-$FormCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $FormUsername, $($FormPassword | ConvertTo-SecureString -AsPlainText -Force)
+$Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList $UserName, $password
+$FormCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $FormUsername, $FormPassword
 ###################################################################################################################################################################
 #							Script starts here
 ###################################################################################################################################################################
@@ -94,17 +94,17 @@ if (test-path $XMLPath) {
 
 
                 # Set $CreateInOU and $HomeDirectory variables depending on what site is specified in the XML
-                if ($Site -like "New York") {
-                    $CreateInOU = "OU=New York,OU=Company users,DC=domain,DC=tld"
-                    $HomeDirectory = "\\NYC-File01\UserHome\$NewNameJoined"
-                    #write-host "CreateInOU: $CreateInOU `nHomeDirectory: $HomeDirectory"
-                } ElseIf ($Site -like "London") {
+                if ($Site -like "London") {
                     $CreateInOU = "OU=London,OU=Company users,DC=domain,DC=tld"
                     $HomeDirectory = "\\LON-File01\UserHome\$NewNameJoined"
                     #write-host "CreateInOU: $CreateInOU `nHomeDirectory: $HomeDirectory"
-                } ElseIf ($Site -like "Paris") {
-                    $CreateInOU = "OU=Paris,OU=Company users,DC=domain,DC=tld"
-                    $HomeDirectory = "\\PAR-File01\UserHome\$NewNameJoined"
+                } ElseIf ($Site -like "New York") {
+                    $CreateInOU = "OU=New York,OU=Company users,DC=domain,DC=tld"
+                    $HomeDirectory = "\\NYC-File01\UserHome\$NewNameJoined"
+                    #write-host "CreateInOU: $CreateInOU `nHomeDirectory: $HomeDirectory"
+                } ElseIf ($Site -like "Amsterdam") {
+                    $CreateInOU = "OU=Amsterdam,OU=Company users,DC=domain,DC=tld"
+                    $HomeDirectory = "\\AMS-File01\UserHome\$NewNameJoined"
                     #write-host "CreateInOU: $CreateInOU `nHomeDirectory: $HomeDirectory"
                 } Else {
                     $FailMessageSite = "AD/O365 AUTOMATION`n`nNEW STAFF ACCOUNT CREATION`nInvalid site specified, not creating account."

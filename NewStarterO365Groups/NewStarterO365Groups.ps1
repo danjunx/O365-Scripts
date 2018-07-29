@@ -23,7 +23,7 @@ $licensesku = "tennantname:STANDARDWOFFPACK_IW_FACULTY"
 ###################################################################################################################################################################
 # Use this part for anything related to O365 accounts or email settings (un/pw's/email subjects/etc)
 $username = "O365SVCAcct@domain.tld"
-$password = "password"
+$Password = cat "C:\path\to\Keys\O365SVCAcct_domain.tld.key" | ConvertTo-SecureString
 
 $SmtpServer = "smtp.office365.com"
 $MailTo = @("helpdesk@domain.tld")
@@ -31,7 +31,6 @@ $MailFrom = "O365SVCAcct@domain.tld"
 $MailPort = "587"
 $MailSubjectSuccess = "AD Automation: Operation successful"
 $MailSubjectFailed = "AD Automation: Operation failed"
-$Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList $username, $($password | ConvertTo-SecureString -AsPlainText -Force)
 
 ###################################################################################################################################################################
 #							Office 365 connection junk start here
@@ -39,11 +38,10 @@ $Credentials = New-Object System.Management.Automation.PSCredential -ArgumentLis
 try {
     #Attempts to connect to Office 365 and install Modules
     Import-Module MSOnline
-    $pass = convertto-securestring -String "$password" -AsPlainText -Force
-    $credential = new-object -typename System.Management.Automation.PSCredential -argumentlist $username, $pass
-    Connect-MsolService -Credential $credential -ErrorAction Stop
-    $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/" -Credential $credential -Authentication "Basic" -AllowRedirection
-    Import-PSSession -AllowClobber $ExchangeSession >null
+    $Credential = new-object -typename System.Management.Automation.PSCredential -argumentlist $UserName, $Password
+    $ExchangeSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://ps.outlook.com/powershell/" -Credential $Credential -Authentication "Basic" -AllowRedirection
+    Import-PSSession -AllowClobber $ExchangeSession
+    Connect-MsolService -Credential $Credential -ErrorAction Stop
 }
 catch [Microsoft.Online.Administration.Automation.MicrosoftOnlineException] {
     #Logs error for incorrect password
@@ -88,6 +86,7 @@ if (test-path $XMLPath) {
         Set-MsolUserLicense -UserPrincipalName "$NewName@$UPNDomain" -AddLicenses "$licensesku"
         write-host "Added license $licensesku to $NewName's product licenses."
         Set-Mailbox "$NewName@$UPNDomain" -AuditEnabled $true -AuditLogAgeLimit 180 -AuditAdmin Update, MoveToDeletedItems, SoftDelete, HardDelete, SendAs, SendOnBehalf, Create, UpdateFolderPermission -AuditDelegate Update, SoftDelete, HardDelete, SendAs, Create, UpdateFolderPermissions, MoveToDeletedItems, SendOnBehalf -AuditOwner UpdateFolderPermission, MailboxLogin, Create, SoftDelete, HardDelete, Update, MoveToDeletedItems
+        Set-Clutter -Identity "$NewName@$UPNDomain" -Enable $False        
 
         foreach ($SEGroup in $SEGroups) {
             if ($SEGroup.WindowsEmailAddress -in $EmailGroupBlacklist) {
