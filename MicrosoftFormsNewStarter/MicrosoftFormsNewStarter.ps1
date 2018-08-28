@@ -9,6 +9,8 @@
 $XMLFilePath = "C:\path\to\OneDrive\Starter form responses\Starter form response*.xml"
 # Path to the location where generated XML files are stored for email group assignment
 $XMLFilePathEmail = "C:\path\to\OneDrive\Starter form responses\EmailGroupXMLFiles\"
+# Path for failed XML files to live in without being deleted by the script (If the account exists already, etc)
+$XMLFilePathFailed = "C:\path\to\OneDrive\Starter form responses\EmailGroupXMLFiles\FailedResponses\"
 # Add the event ID here to filter with in Event Viewer
 $EventID = 5
 # Add the UPN domain here, make sure it's the full domain.tld
@@ -170,11 +172,13 @@ if (test-path $XMLPath) {
                        $xmlWriter.Close()
 
                     } else {
-                        # If the user already exists, send an email to report the problem
-                       $FailMessageAlreadyExists = "AD/O365 AUTOMATION`n`nNEW STAFF ACCOUNT CREATION`n`User "$FirstNewName $LastNewName" already exists in AD, not creating account.`nNew user form submitted by $SubmittedBy."
+                        # If the user already exists, send an email to report the problem and move the file elsewhere so the script doesn't send emails continuously
+                       $FailMessageAlreadyExists = "AD/O365 AUTOMATION`n`nNEW STAFF ACCOUNT CREATION`n`User $FirstNewName $LastNewName already exists in AD, not creating account.`nMoved XML file to $XMLFilePathFailed.`nNew user form submitted by $SubmittedBy."
                        Send-MailMessage -To "$MailToIT" -from "$MailFrom" -Subject $MailSubjectFailed -Body $FailMessageAlreadyExists -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $Credentials
                        Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Error -EventId $EventID -Message $FailMessageAlreadyExists
                        write-host "AD account exists already"
+                       move-item -Path $XML -Destination $XMLFilePathFailed
+                       exit
                    }
 
                    # Delete the XML once completed
