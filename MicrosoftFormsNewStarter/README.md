@@ -22,7 +22,7 @@ Once you have your form sorted, you'll need to create a Flow to save new Forms r
 
 After doing this, the next thing to do is put the script somewhere it can run without interruptions (the server AADConnect is running is a good place), install OneDrive for Business on the server, and read/edit the top section of the script with usernames/passwords/filepaths. (There's also some useful comments in there related to event logging)<br />
 
-I've included an example of the XML file the Flow generates, a vbs file to launch the script from (without it popping up a blank PowerShell window every time), and a scheduled task XML file that you should be able to edit with the filepath/username and then import into Task Scheduler. <br />
+I've included an example of the XML file the Flow generates, an example of the XML file the script generates (for the O365 groups part), a vbs file to launch the script from (without it popping up a blank PowerShell window every time), and a scheduled task XML file that you should be able to edit with the filepath/username and then import into Task Scheduler. <br />
 In our case, we have a scheduled task running every 10 minutes as the Generic AD Service account.
 
 ## Other useful info
