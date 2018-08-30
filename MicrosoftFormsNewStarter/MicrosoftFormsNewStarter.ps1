@@ -17,7 +17,7 @@ $EventID = 5
 $UPNDomain = "domain.tld"
 # Set a plaintext defualt password for the account here, has to meet complexity requirements
 #$DefaultPasswordPT = "Password1!"
-# REPLACED, see line 94
+# REPLACED, see line 91
 # Add the IT DG email address
 $MailToIT = "it@domain.tld"
 # Add AD groups to blacklist here, make sure it's the full CN,CN,DC,DC and that they're in "quotes" within the array
@@ -182,6 +182,7 @@ if (test-path $XMLPath) {
                    }
 
                    # Delete the XML once completed
+               }
                 remove-item $XML
                 if (test-path $XML) {
                     write-host "XML still exists"
@@ -201,47 +202,47 @@ if (test-path $XMLPath) {
                     #send-MailMessage -To "$MailTo" -from "$MailFrom" -Subject $MailSubjectCreated -Body $SuccessMessage -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $Credentials
                     # Create the email to send to the ticket system and send it off
                     $TicketEmailSubject = "NEW STARTER - $NewName"
-                    $TicketEmailBody = "Date starting: $StartDate
-                    `nName: $NewName
-                    `nLine manager: $LineManager
-                    `nDepartment: $Department
-                    `nSite: $site
-                    `nJob title: $JobTitle
-                    `nOffice Equipment Required: $OfficeEquipment
-                    `nSecurity equivalent to...: $SecurityEquivalent
-                    `nNotes: $Notes
-                    `nUsername: $NewNameJoined
-                    `nDefault password: $DefaultPasswordPT
-                    `nCreated in OU: $CreateInOU
-                    `nMember of the following Security Groups: $SEGroupsFriendly
-                    `nNew user form submitted by: $SubmittedBy"
-                    send-MailMessage -To "$MailTo" -from "$FormUsername" -Subject $TicketEmailSubject -Body $TicketEmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials
+                    $TicketEmailBody = "<font face='Calibri' color=#000000>Date starting: $StartDate<br>
+                    Name: $NewName<br>
+                    Line manager: $LineManager<br>
+                    Department: $Department<br>
+                    Site: $site<br>
+                    Job title: $JobTitle<br>
+                    Office Equipment Required: $OfficeEquipment<br>
+                    Security equivalent to...: $SecurityEquivalent<br>
+                    Notes: $Notes<br>
+                    Username: $NewNameJoined<br>
+                    Default password: $DefaultPasswordPT<br>
+                    Created in OU: $CreateInOU<br>
+                    Member of the following Security Groups: $SEGroupsFriendly<br>
+                    New user form submitted by: $SubmittedBy<br></font>"
+                    send-MailMessage -To "$MailTo" -from "$FormUsername" -Subject $TicketEmailSubject -Body $TicketEmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials -BodyAsHtml
                     # Create the email to send to HR/the person that submitted the form and send it off
                     $HREmailSubject = "New Starter - $NewName"
-                    $HREmailBody = "Name: $NewName
-                    `nJob title: $JobTitle
-                    `nDate starting: $StartDate
-                    `nLine manager: $LineManager
-                    `nDepartment: $Department
-                    `nSite: $site
-                    `nOffice Equipment Required: $OfficeEquipment
-                    `nSecurity equivalent to...: $SecurityEquivalent
-                    `nNotes: $Notes"
-                    send-MailMessage -To "$SubmittedBy" -from "$FormUsername" -Subject $HREmailSubject -Body $HREmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials
+                    $HREmailBody = "<font face='Calibri' color=#000000>Name: $NewName<br>
+                    Job title: $JobTitle<br>
+                    Date starting: $StartDate<br>
+                    Line manager: $LineManager<br>
+                    Department: $Department<br>
+                    Site: $site<br>
+                    Office Equipment Required: $OfficeEquipment<br>
+                    Security equivalent to...: $SecurityEquivalent<br>
+                    Notes: $Notes<br></font>"
+                    send-MailMessage -To "$SubmittedBy" -from "$FormUsername" -Subject $HREmailSubject -Body $HREmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials -BodyAsHtml
 
                 }
+            } else {
+                #Form has been submitted by someone not in the whitelist at the top of the script
+                $NotFromEmailSubject = "New Starter Form - Unauthorised form submitted"
+                $NotFromEmailBody = "<font face='Calibri' color=#FF0000>New starter form has been submitted by an unauthorised users<br><font>
+                <font face='Calibri' color=#000000>Submitted by: $SubmittedBy<br>
+                Name: $NewName<br>
+                Department: $Department<br>
+                New user creation process skipped for this form<br>"
+                send-MailMessage -To "IT@domain.tld" -from "$FormUsername" -Subject $NotFormEmaiLSubject -Body $NotFormEmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials -BodyAsHtml
+                Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Information -EventId $EventID -Message $NotFormEmailBody
+                Remove-Item $XML
             }
-        } else {
-            #Form has been submitted by someone not in the whitelist at the top of the script
-            $NotFromEmailSubject = "New Starter Form - Unauthorised form submitted"
-            $NotFromEmailBody = "New starter form has been submitted by an unauthorised users
-            `nSubmitted by: $SubmittedBy
-            `nName: $NewName
-            `nDepartment: $Department
-            `nNew user creation process skipped for this form"
-            send-MailMessage -To "$MailToIT" -from "$FormUsername" -Subject $NotFormEmaiLSubject -Body $NotFormEmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials
-            Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Information -EventId $EventID -Message $NotFormEmailBody
-            Remove-Item $XML
         }
     }
     # Try and run an AD sync after the account has been created in AD, just to speed the process up a little bit
