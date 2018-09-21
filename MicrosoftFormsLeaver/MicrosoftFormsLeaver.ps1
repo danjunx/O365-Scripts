@@ -11,6 +11,8 @@
 ###################################################################################################################################################################
 # Path to the XML that contains the new user details from the Microsoft Forms form
 $XMLFilePath = "C:\path\to\OneDrive\Leaver form responses\Leaver form response*.xml"
+# Path for failed XML files to live in without being deleted by the script (If the account exists already, etc)
+$XMLFilePathFailed = "C:\path\to\OneDrive\Leaver form responses\FailedResponses\"
 # Add the event ID here to filter with in Event Viewer
 $EventID = 7
 # Add the backup location for the users data, must be a valid path and the user the script runs as must have write permissions
@@ -43,9 +45,9 @@ $SmtpServer = "smtp.office365.com"
 $MailTo = @("helpdesk@domain.tld")
 $MailFrom = "O365SVCAcct@domain.tld"
 $MailPort = "587"
-$MailSubjectSubmitted = "AD Automation: New user form submitted"
-$MailSubjectCreated = "AD Automation: New user created"
-$MailSubjectFailed = "AD Automation: New user creation failed"
+$MailSubjectSubmitted = "AD Automation: Leaver form submitted"
+$MailSubjectCreated = "AD Automation: Leaver process has completed"
+$MailSubjectFailed = "AD Automation: Leaver process failed"
 $Credentials = New-Object System.Management.Automation.PSCredential -ArgumentList $UserName, $Password
 $FormCredentials = New-Object System.Management.Automation.PSCredential -ArgumentList $FormUsername, $FormPassword
 
@@ -110,12 +112,19 @@ if (test-path $XMLPath) {
                 $LeaverFirstName,$LeaverLastName = $LeaverName.Split(' ')
                 $DGTFirstName,$DGTLastName = $DataGivenTo.Split(' ')
                 $EGTFirstName,$EGTLastName = $EmailGivenTo.Split(' ')
-                $EFTFirstName,$EFTLastName = $EmailForwardedTo.Split(' ')
                 # Rejoin the names back into a single variable with a dot (.) inbetween them to make the username
                 $LeaverNameJoined = "$LeaverFirstName.$LeaverLastName"
                 $DGTNameJoined = "$DGTFirstName.$DGTLastName"
                 $EGTNameJoined = "$EGTFirstName.$EGTLastName"
-                $EFTNameJoined = "$EFTFirstName.$EFTLastName"
+                # Check if the $EmailForwardedTo is an email address or a username
+                if ($EmailForwardedTo -like "*` `*") {
+                   $EFTFirstName,$EFTLastName = $EmailForwardedTo.Split(' ')
+                   $EFTNameJoined = "$EFTFirstName.$EFTLastName"
+
+                   } elseif ($EmailForwardedTo -like "*@$UPNDomain") {
+                    $EFTNameJoined = $EmailForwardedTo.Replace("@$UPNDomain", "")
+                    $EFTFirstName,$EFTLastName = $EmailForwardedTo.Split(' ')
+                }
                 # Create the email address to use later
                 $LeaverEmailAddress = "$LeaverNameJoined@$UPNDomain"
 
@@ -126,11 +135,12 @@ if (test-path $XMLPath) {
                 $CheckLeaverExists = get-aduser -filter {sAMAccountName -eq $LeaverNameJoined}
                 if (!$CheckLeaverExists) {
                     # If the leaver doesn't exist, send an email to report the problem
-                    $FailMessageDoesNotExist = "AD/O365 AUTOMATION`n`nLEAVER PROCESS`n`User $LeaverName doesn't exist in AD, cannot continue with leaver process."
-                    Send-MailMessage -To "$MailtTo" -from "$MailFrom" -Subject $MailSubjectFailed -Body $FailMessageDoesNotExist -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $Credentials
+                    $FailMessageDoesNotExist = "AD/O365 AUTOMATION`n`nLEAVER PROCESS`n`User $LeaverName doesn't exist in AD, cannot continue with leaver process.`nMoved XML file to $XMLFilePathFailed.`nNew user form submitted by $SubmittedBy."
+                    Send-MailMessage -To "$MailToIT" -from "$MailFrom" -Subject $MailSubjectFailed -Body $FailMessageDoesNotExist -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $Credentials
                     Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Error -EventId $EventID -Message $FailMessageDoesNotExist
                     write-host "AD account doesn't exist"
-                    exit
+                    move-item -Path $XML -Destination $XMLFilePathFailed
+                    exit 
 
                 } else {
                     $LeaverDN = get-aduser -identity $LeaverNameJoined | select DistinguishedName | Format-Table -HideTableHeaders | Out-String
@@ -187,8 +197,8 @@ if (test-path $XMLPath) {
 
                 }
                 # Delete the XML once completed
-                remove-item $XMLPath
-                if (test-path $XMLPath) {
+                remove-item $XML
+                if (test-path $XML) {
                     write-host "XML still exists"
                 } else {
                     write-host "XML has been deleted"
@@ -243,13 +253,14 @@ if (test-path $XMLPath) {
                 $NotFromEmailBody = "<font face='Calibri' color=#FF0000>A leaver form has been submitted by an unauthorised user<br><font>
                 <font face='Calibri' color=#000000>Submitted by: $SubmittedBy<br>
                 Leaver name: $LeaverName<br><br>
-                New user creation process skipped for this form<br>"
+                Leaver process skipped for this form<br>
+                Moved XML file to $XMLFilePathFailed. New user form submitted by $SubmittedBy<br>"
                 send-MailMessage -To "$MailToIT" -from "$FormUsername" -Subject $NotFromEmailSubject -Body $NotFromEmailBody -SmtpServer $SmtpServer -port $MailPort -UseSsl -Credential $FormCredentials -BodyAsHtml
                 Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Information -EventId $EventID -Message $NotFormEmailBody
-                Remove-Item $XML
+                move-item -Path $XML -Destination $XMLFilePathFailed
             }
         } else {
-            write-host "Leaver is not leaving until $LeavingDate"
+            write-host "Leaver $LeaverName is not leaving until $LeavingDate"
         }
     }
 
