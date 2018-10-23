@@ -13,6 +13,8 @@
 $XMLFilePath = "C:\path\to\OneDrive\Leaver form responses\Leaver form response*.xml"
 # Path for failed XML files to live in without being deleted by the script (If the account exists already, etc)
 $XMLFilePathFailed = "C:\path\to\OneDrive\Leaver form responses\FailedResponses\"
+# Path to the location where generated XML files are stored for O365 data exporting
+$XMLFileExport = "C:\path\to\OneDrive\Leaver form responses\O365DataExport\"
 # Add the event ID here to filter with in Event Viewer
 $EventID = 7
 # Add the backup location for the users data, must be a valid path and the user the script runs as must have write permissions
@@ -140,7 +142,7 @@ if (test-path $XMLPath) {
                     Write-EventLog -LogName Application -Source "Office 365 Log" -EntryType Error -EventId $EventID -Message $FailMessageDoesNotExist
                     write-host "AD account doesn't exist"
                     move-item -Path $XML -Destination $XMLFilePathFailed
-                    exit 
+                    exit
 
                 } else {
                     $LeaverDN = get-aduser -identity $LeaverNameJoined | select DistinguishedName | Format-Table -HideTableHeaders | Out-String
@@ -166,6 +168,26 @@ if (test-path $XMLPath) {
                     # Set forward to the EFT value
                     set-Mailbox $LeaverEmailAddress -ForwardingAddress "$EFTNameJoined@$UPNDomain"
                     Set-MailboxAutoReplyConfiguration -Identity $LeaverEmailAddress -AutoReplyState Enabled -InternalMessage "Please note that I am no longer working for $CompanyName, my responsibilities have been passed to $EFTFirstName $EFTLastName. Please contact he/she on $EFTNameJoined@$UPNDomain or $CompanyNumber." -ExternalMessage "Please note that I am no longer working for $CompanyName, my responsibilities have been passed to $EFTFirstName $EFTLastName. Please contact he/she on $EFTNameJoined@$UPNDomain or $CompanyNumber."
+
+                    # Generate an XML file to handle the data export from O365
+                    # Set the file name, putting it here ensures it'll be a random name every time the foreach runs
+                    $XMLFileNameExport = Invoke-Generate "ExportO365Data#####.xml"
+                    # Create the file using the path variable at the top of the script
+                    $XmlWriter = New-Object System.XMl.XmlTextWriter("$XMLFileExport$XMLFileNameExport",$Null)
+                    # Set the formatting
+                    $xmlWriter.Formatting = "Indented"
+                    $xmlWriter.Indentation = "4"
+                    # Write to the file
+                    $xmlWriter.WriteStartElement("User")
+                    $xmlWriter.WriteElementString("ExportUser","$LeaverName")
+                    $xmlWriter.WriteElementString("ExportUserName","$LeaverNameJoined@$UPNDomain")
+                    $xmlWriter.WriteEndElement
+                    $xmlWriter.WriteEndElement()
+                    # Finish and close the document
+                    $xmlWriter.Finalize
+                    $xmlWriter.Flush
+                    $xmlWriter.Close()
+
                 }
 
                 #SnipeIT parts

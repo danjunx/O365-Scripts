@@ -1,5 +1,8 @@
 # MicrosoftFormsLeaver
-This script takes XML responses generated from a Microsoft Forms/Flow workflow and disables the corresponding AD/O365 accounts. <br/> In detail, the script will disable the AD account, reset the password, remove the user from the O365 GAL, disable the sign-in status and apps (IMAP, POP3, etc), set an OoO, and set email forwarding to another user. It will also check against our asset management system [SnipeIT](https://snipeitapp.com) for any assets assigned to the user.<br/> Once the script has done the thing it sends an email to the user that submitted the form with what they submitted, and sends an email to our helpdesk with all the details for the user it just disabled. <br/> The script can work without Forms/Flow, you'll just need to generate the XML file yourself somehow.
+This script takes XML responses generated from a Microsoft Forms/Flow workflow and disables the corresponding AD/O365 accounts.     
+In detail, the script will disable the AD account, reset the password, remove the user from the O365 GAL, disable the sign-in status and apps (IMAP, POP3, etc), set an OoO, and set email forwarding to another user. It will also check against our asset management system [SnipeIT](https://snipeitapp.com) for any assets assigned to the user.    
+Once the script has done the thing it sends an email to the user that submitted the form with what they submitted, and sends an email to our helpdesk with all the details for the user it just disabled.   
+The script can work without Forms/Flow, you'll just need to generate the XML file yourself somehow.
 
 ### Prerequisites/things to note
 - This script uses [NameIT](https://github.com/dfinke/NameIT) to randomly generate the password string.
@@ -15,11 +18,12 @@ In our environment, the setup for this script is as follows:
 - OneDrive for Business is installed on the server and logged in as the "forms" account (So we can access the XML files that the Flow creates).
 - Generic AD service account that's used to create/modify the AD users.
 
-To get things started, you'll want to create a Form on the generic "forms" account that has all the fields required for a leaver (usually the full name, when their last day onsite is, who their emails are going to forwarded to, who is going to have their data, etc)<br/>
-Like so: <br/>
+To get things started, you'll want to create a Form on the generic "forms" account that has all the fields required for a leaver (usually the full name, when their last day onsite is, who their emails are going to forwarded to, who is going to have their data, etc) like so:  
+
 <img src="/Images/MicrosoftFormsLeaver/MicrosoftForm.png" width="60%">
 
-Once you have your form sorted, you'll need to create a Flow to save new Forms responses to a folder in Onedrive folder. Here I'm using the submission time as part of the filename so we can have multiple forms submitted at once without it causing problems.<br/> The File Content is generated as an XML-like file using Dynamic Content and the responses within the form to fill the fields. One thing to note is that inserting the Dynamic Content variables on the Flow creation page was a bit fiddly, but that may have just been a problem at my end.  
+Once you have your form sorted, you'll need to create a Flow to save new Forms responses to a folder in Onedrive folder. Here I'm using the submission time as part of the filename so we can have multiple forms submitted at once without it causing problems.    
+The File Content is generated as an XML-like file using Dynamic Content and the responses within the form to fill the fields. One thing to note is that inserting the Dynamic Content variables on the Flow creation page was a bit fiddly, but that may have just been a problem at my end.  
 <img src="/Images/MicrosoftFormsLeaver/MicrosoftFlow.png" width="60%">
 
 If you're using the SnipeIT part of the script, you'll want to do the following:
@@ -36,4 +40,5 @@ In our case, we have a scheduled task running every day at 6PM as the Generic AD
 
 ## Other useful info
 - Every time I update the script in our production environment I'll try to update this repo
-- I've probably missed some bits off of this readme, but if I do notice anything I'll add it to This
+- I've probably missed some bits off of this readme, but if I do notice anything I'll add it to this
+- This script directly works with the [ExportO365Data](https://github.com/danjunx/O365-Scripts/tree/master/ExportO365Data) script using the same XML reading stuff to export a users mailbox to a PST, so it's definitely worth checking that one out too.
