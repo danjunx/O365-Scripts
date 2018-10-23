@@ -25,7 +25,7 @@ $MailToIT = "it@domain.tld"
 ###################################################################################################################################################################
 # Use this part for anything related to O365 accounts or email settings (un/pw's/email subjects/etc)
 $UserName = "O365SVCAcct@domain.tld"
-$Password = cat "C:\SVN\LiveCommited\O365-Scripts\Keys\O365SVCAcct_domain.tld.key" | ConvertTo-SecureString
+$Password = cat "C:\path\to\Keys\O365SVCAcct_domain.tld.key" | ConvertTo-SecureString
 
 $SmtpServer = "smtp.office365.com"
 $MailTo = @("IT@domain.tld")
