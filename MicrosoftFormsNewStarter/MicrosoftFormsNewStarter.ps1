@@ -49,7 +49,7 @@ $FormCredentials = New-Object System.Management.Automation.PSCredential -Argumen
 Import-Module ActiveDirectory
 Import-Module NameIT
 # Test to see if the XML exists, if it does continue
-$XMLPath = get-childitem $XMLFilePath -recurse
+$XMLPath = get-childitem $XMLFilePath
 $TodaysDate = Get-Date -UFormat "%d/%m/%Y"
 
 if (test-path $XMLPath) {

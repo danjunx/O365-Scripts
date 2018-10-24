@@ -86,7 +86,7 @@ Import-Module NameIT
 
 Set-Info -URL $SnipeITURL -apiKey $SnipeITAPIKey
 # Test to see if the XML exists, if it does continue
-$XMLPath = get-childitem $XMLFilePath -recurse
+$XMLPath = get-childitem $XMLFilePath
 $TodaysDate = Get-Date -UFormat "%Y-%m-%d"
 
 if (test-path $XMLPath) {
